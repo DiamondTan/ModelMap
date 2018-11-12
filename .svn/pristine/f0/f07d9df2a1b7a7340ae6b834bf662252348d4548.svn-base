@@ -1,0 +1,47 @@
+#pragma once
+#include <string>
+#include <stdlib.h>
+#include "glm.h"
+
+#define SOFA			0
+#define BED			1
+#define TABLE			2
+#define CHAIR			3
+#define CABINET		4
+#define LIGHT			5
+#define OTHER			6
+
+class COBJ
+{
+public:
+	COBJ();
+	COBJ(char *,int);
+	COBJ(std::string,int);
+	virtual ~COBJ();
+	bool ReadFile(char *);
+	bool ReadFile(std::string);
+	void LoadOBJ();
+	void Init();
+	int getType() const;
+	void setType(int );
+	std::string getName();
+	virtual void draw();
+	void setLocation(float,float);
+	bool operator==(COBJ &);
+private:
+	float xTra;
+	float yTra;
+	float zTra;
+	float xRot;
+	GLfloat dimensions[3];
+	bool m_bDraw;
+	GLMmodel* pModel ;
+	float scale;
+	//int glName;
+	std::string FileName;
+	std::string name;
+	int type;
+	int color[3];
+	static float modelCenter[3];
+};
+

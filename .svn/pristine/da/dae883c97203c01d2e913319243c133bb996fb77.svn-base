@@ -1,0 +1,99 @@
+#include "stdafx.h"
+#include "OBJManager.h"
+
+COBJManager* COBJManager::m_pOBJManager = NULL;
+int COBJManager::show = -1;
+
+int COBJManager::getShow()
+{
+	return COBJManager::show;
+}
+
+void COBJManager::setShow(int show)
+{
+	COBJManager::show=show;
+}
+
+COBJManager::COBJManager()
+{
+	srand(time(NULL));
+}
+
+
+COBJManager::~COBJManager()
+{
+}
+
+COBJ* COBJManager::getAt(const int i) const
+{
+	try{
+		return this->data.at(i);
+	}
+	catch (std::out_of_range err)
+	{
+		//MessageBox(NULL,L"ERROR",(LPCWSTR)err.what(),MB_OK|MB_ICONERROR);
+		MessageBox(NULL, L"ERROR", L"数组越界", MB_OK | MB_ICONERROR);
+	}
+	return this->data.at(this->getSize() - 1);
+}
+
+int COBJManager::getSize() const 
+{
+	return (this->data).getSize();
+}
+
+void COBJManager::addOBJ(COBJ obj)
+{
+	COBJ* pThis;
+	for (int i = 0; i < this->getSize(); i++)
+	{
+		pThis = this->getAt(i);
+		if ( *pThis== obj)
+		{
+			return;
+		}
+
+	}
+	this->data.Add(obj);
+}
+
+
+COBJManager* COBJManager::GetInstance()
+{
+	if (COBJManager::m_pOBJManager == NULL)
+	{
+		m_pOBJManager = new COBJManager;
+	}
+
+	return m_pOBJManager;
+}
+
+void COBJManager::DestoryInstance()
+{
+	if (COBJManager::m_pOBJManager != NULL)
+	{
+		delete m_pOBJManager;
+	}
+
+}
+void COBJManager::addDraw(int value)
+{
+	this->DrawList.push_back(value);
+}
+int COBJManager::getDrawAt(int i) const
+{
+	try{
+		return (this->DrawList.at(i));
+	}
+	catch (std::out_of_range err)
+	{
+		//MessageBox(NULL,L"ERROR",(LPCWSTR)err.what(),MB_OK|MB_ICONERROR);
+		MessageBox(NULL, L"ERROR", L"数组越界", MB_OK | MB_ICONERROR);
+	}
+	return (this->DrawList.at(this->getSize() - 1));
+}
+
+int COBJManager::getDrawSize() const 
+{
+	return (this->DrawList).size();
+}

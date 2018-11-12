@@ -1,0 +1,18 @@
+#SOFA BED TABLE CHAIR CABIENT LIGHT OTHER
+#SOFA 		0
+#BED 		1
+#TABLE 		2
+#CHAIR		3
+#CABIENT	4	
+#LIGHT 		5
+#OTHER		6
+
+#SOFA
+
+#data/obj/sofa/sofa0.obj  SOFA
+data/obj/sofa/sofa1.obj  SOFA
+data/obj/sofa/sofa2.obj  SOFA
+data/obj/sofa/sofa3.obj  SOFA
+data/obj/sofa/sofa4.obj  SOFA
+data/obj/sofa/sofa5.obj  SOFA
+data/obj/sofa/sofa6.obj  SOFA

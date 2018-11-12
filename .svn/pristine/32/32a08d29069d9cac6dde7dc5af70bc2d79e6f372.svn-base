@@ -1,0 +1,27 @@
+#pragma once
+#include "MyList.h"
+#include "OBJ.h"
+#include <string>
+#include <vector>
+class COBJManager
+{
+public:
+	static COBJManager*GetInstance();
+	static void DestoryInstance();
+	static int getShow();
+	static void setShow(int );
+	virtual ~COBJManager();
+	COBJ* getAt(const int i) const;
+	int getSize() const;
+	void addOBJ(COBJ );
+	void addDraw(int);
+	int getDrawAt(int i) const;
+	int getDrawSize() const;
+private:
+	COBJManager();
+	static int show;
+	static COBJManager* m_pOBJManager;
+	MyList<COBJ> data;
+	std::vector<int> DrawList;
+};
+

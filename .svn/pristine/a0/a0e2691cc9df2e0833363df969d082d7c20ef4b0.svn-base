@@ -1,0 +1,296 @@
+// DesignPlan.cpp : 实现文件
+//
+
+#include "stdafx.h"
+#include "ModelMap.h"
+#include "DesignPlan.h"
+#include <ctype.h>
+
+// CDesignPlan
+
+IMPLEMENT_DYNCREATE(CDesignPlan, CFormView)
+
+CDesignPlan::CDesignPlan()
+: CFormView(CDesignPlan::IDD)
+, fileName("data/obj.conf")
+, nDat(-1)
+, nOldDat(-1)
+{
+
+}
+
+CDesignPlan::~CDesignPlan()
+{
+}
+
+void CDesignPlan::DoDataExchange(CDataExchange* pDX)
+{
+	CFormView::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_TREE_FILE_NAME, m_TreeCtrl);
+
+	init();
+
+}
+
+void CDesignPlan::init()
+{
+
+	char Buf[][10] = { "SOFA", "BED", "TABLE", "CHAIR", "CABINET", "LIGHT" };
+	int eno = fopen_s(&fp, this->fileName.c_str(), "r");
+	if (eno)
+	{
+		CString str;
+		str = this->fileName.c_str();
+		MessageBox(L"打开文件失败\n找不到文件" + str + "\n", L"ERROR", MB_OK | MB_ICONERROR);
+		return;
+	}
+
+
+	char readBuf[1024] = { 0 };
+	//	std::string readBuf;
+	char typeBuf[10] = { 0 };
+	char Name[1024] = { 0 };
+	int type = -1;
+	while (!feof(fp))
+	{
+
+		fgets(readBuf, 1024, fp);
+
+		if (readBuf[0] == '#' || readBuf[0] == '\n')
+			continue;
+		char *p = readBuf;
+		int i = 0;
+		while (*p != '\0' && *p != ' ' && *p != '\t')
+		{
+			Name[i] = *p;
+			i++; p++;
+		}
+		Name[i] = '\0';
+		while (!isalpha(*p))
+		{
+			p++;
+		}
+		i = 0;
+		do
+		{
+			typeBuf[i] = *p;
+			i++; p++;
+		} while (isalpha(*p));
+
+		typeBuf[i] = '\0';
+
+		for (int i = 0; i < 6; i++)
+		{
+			if (!_stricmp(typeBuf, Buf[i]))
+			{
+				type = i;
+				break;
+			}
+		}
+
+		if (type == -1)
+		{
+			type = OTHER;
+		}
+
+//		m_pOBJManager->addOBJ(COBJ(Name, type));
+
+		m_pOBJManager->addfile(COBJManager::file(Name, type));
+
+	}
+
+
+	fclose(fp);
+}
+
+BEGIN_MESSAGE_MAP(CDesignPlan, CFormView)
+	ON_WM_SIZE()
+	ON_WM_PAINT()
+	ON_WM_CREATE()
+	ON_WM_CLOSE()
+	ON_WM_TIMER()
+	ON_BN_CLICKED(IDC_BUTTON_REFRESH, &CDesignPlan::OnBnClickedButtonRefresh)
+	ON_NOTIFY(NM_CLICK, IDC_TREE_FILE_NAME, &CDesignPlan::OnClickTreeFileName)
+END_MESSAGE_MAP()
+
+
+// CDesignPlan 诊断
+
+#ifdef _DEBUG
+void CDesignPlan::AssertValid() const
+{
+	CFormView::AssertValid();
+}
+
+#ifndef _WIN32_WCE
+void CDesignPlan::Dump(CDumpContext& dc) const
+{
+	CFormView::Dump(dc);
+}
+#endif
+#endif //_DEBUG
+
+
+// CDesignPlan 消息处理程序
+
+
+void CDesignPlan::OnSize(UINT nType, int cx, int cy)
+{
+	CFormView::OnSize(nType, cx, cy);
+
+	// TODO:  在此处添加消息处理程序代码
+
+
+	cxClient = cx;
+	cyClient = cy;
+
+
+	Invalidate();
+}
+
+
+void CDesignPlan::OnPaint()
+{
+	CPaintDC dc(this); // device context for painting
+	// TODO:  在此处添加消息处理程序代码
+	// 不为绘图消息调用 CFormView::OnPaint()
+
+	CRect rect;
+
+	GetDlgItem(IDC_BUTTON_REFRESH)->GetWindowRect(&rect);//获取控件的屏幕坐标
+	ScreenToClient(&rect);//转换为对话框上的客户坐标
+	GetDlgItem(IDC_STATIC)->MoveWindow(0, rect.bottom, cxClient, 3);
+
+	m_TreeCtrl.MoveWindow(0, rect.bottom, cxClient, cyClient, TRUE);
+
+
+	COBJ *obj;
+	CString str;
+	m_TreeCtrl.DeleteAllItems();
+
+	HTREEITEM hRoot;
+
+	hRoot = m_TreeCtrl.InsertItem(L"3D模型", TVI_ROOT); //插入根结点
+
+	m_hChild[0] = m_TreeCtrl.InsertItem(L"沙发", hRoot);
+	m_hChild[1] = m_TreeCtrl.InsertItem(L"床", hRoot);
+	m_hChild[2] = m_TreeCtrl.InsertItem(L"台桌", hRoot);
+	m_hChild[3] = m_TreeCtrl.InsertItem(L"椅子", hRoot);
+	m_hChild[4] = m_TreeCtrl.InsertItem(L"柜子", hRoot);
+	m_hChild[5] = m_TreeCtrl.InsertItem(L"灯具", hRoot);
+	m_hChild[6] = m_TreeCtrl.InsertItem(L"其他", hRoot);
+	HTREEITEM hItem;
+	COBJManager::file *temp;
+	for (int i = 0; i < m_pOBJManager->getfileSize(); i++)
+	{
+
+		temp = m_pOBJManager->gatfileAt(i);
+		int type = temp->getType();
+		str = temp->name.c_str();
+		hItem = m_TreeCtrl.InsertItem(str, m_hChild[type]);
+		m_TreeCtrl.SetItemData(hItem, i);
+	}
+
+
+}
+
+
+int CDesignPlan::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CFormView::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+
+	m_pOBJManager = COBJManager::GetInstance();
+
+	ReadOBJThread = AfxBeginThread(ThreadFunc, &threadStart);
+
+
+	return 0;
+}
+
+
+void CDesignPlan::OnClose()
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+
+	CFormView::OnClose();
+}
+
+
+void CDesignPlan::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+
+	CFormView::OnTimer(nIDEvent);
+}
+
+
+void CDesignPlan::OnBnClickedButtonRefresh()
+{
+	// TODO:  在此添加控件通知处理程序代码
+	//init();
+	Invalidate();
+}
+
+static bool b_thread = false;;
+void CDesignPlan::OnClickTreeFileName(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// TODO:  在此添加控件通知处理程序代码
+
+	CPoint pt = GetCurrentMessage()->pt;   //获取当前鼠标点击消息的坐标点
+
+	m_TreeCtrl.ScreenToClient(&pt);   //将鼠标的屏幕坐标，转换成树形控件的客户区坐标
+
+	UINT uFlags = 0;
+	DWORD lpExitCode;
+	HTREEITEM hItem = m_TreeCtrl.HitTest(pt, &uFlags);//然后做点击测试
+
+	if ((hItem != NULL) && (TVHT_ONITEM & uFlags))//如果点击的位置是在节点位置上面
+	{
+		m_TreeCtrl.SelectItem(hItem);
+		//获取开始我们设置的数据，注意这就是我为什么开始要每个节点设置不同的数据的原因。当然，如果你的数据节点比较少，你也可以通过获取节点的文字，如上面设置的"海淀区"，然后通过字符串比较来判断点击了哪个节点
+		nDat = m_TreeCtrl.GetItemData(hItem);
+
+		if (!b_thread)
+		{
+			//COBJManager::setShow(nDat);
+			m_pOBJManager->setShowObj(m_pOBJManager->gatfileAt(nDat)->fileName);
+			threadStart.SetEvent();//在另一个线程结束时调用，即可取消上一线程的阻塞
+		}
+
+		
+
+		*pResult = 0;
+	}
+}
+UINT CDesignPlan::ThreadFunc(LPVOID lpParam)
+{
+	CEvent *threadStart = (CEvent *)lpParam;
+
+	while (true){
+		b_thread = true;
+		/*threadStart->ResetEvent();
+		COBJManager* m_pOBJManager = COBJManager::GetInstance();
+		int show = COBJManager::getShow();
+		if (show != -1)
+		{
+			COBJ * OBJ = m_pOBJManager->getAt(COBJManager::getShow());
+			OBJ->LoadOBJ();
+		}*/
+
+		COBJ * OBJ = COBJManager::getShowOBJ();
+		if (OBJ != NULL)
+		{
+			OBJ->LoadOBJ();
+		}
+
+		b_thread = false;
+		::WaitForSingleObject(threadStart->m_hObject, INFINITE);//无限时间阻塞当前线程
+	}
+
+	//threadStart->SetEvent();//在另一个线程结束时调用，即可取消上一线程的阻塞
+
+	return 0;
+}
